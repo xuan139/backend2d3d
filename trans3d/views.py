@@ -2,10 +2,21 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 from django.http import HttpResponse
-from django.core.files.storage import default_storage
-from PIL import Image  
 import cv2
 import numpy as np 
+from django.http import HttpResponseRedirect
+from django.core.files.storage import FileSystemStorage
+
+from django.http import JsonResponse
+from natsort import natsorted
+from moviepy.editor import *
+from moviepy.audio.fx import all
+from moviepy.video.fx.all import crop
+
+
+
+
+
 
 def resize_image(image, width,height):
     dim = (width, height)
@@ -71,21 +82,20 @@ def upload(request):
     png2d = '2d.png'
     png3d = '3d.png'
     width2d,height2d = 1954,1080 #放大图片 从size1920*1080 宽度放到1954为最佳3D效果
-    #  Saving POST'ed file to storage
-    file = request.FILES['image']
-    file_name = default_storage.save(file.name, file)
+        
+    myfile = request.FILES['image']
 
-    #  Reading file from storage
-    file = default_storage.open(file_name)
-    file_url = default_storage.url(file_name)
-    # img = cv2.read(file)
-    print(cv2.__version__)
-    file_name
-    print('file_name',file_name)
-    print('file',file)
-    print('file_url',file_url)
-    img = cv2.imread(str(file),cv2.IMREAD_UNCHANGED)
-    print('原始 jpg img shape is ',img.shape)
+    fs = FileSystemStorage()  #默认路径 MEDIA_ROOT
+    file_name = fs.save('test', myfile)
+    file_url = fs.url(file_name)
+    
+    print('save file_name,file_url',file_name,file_url)
+    
+    #read the file 
+    file2d = fs.open(file_name)
+    print('file2d',file2d)
+    img = cv2.imread(str(file2d),cv2.IMREAD_UNCHANGED)
+    print('2d img shape is ',img.shape)
 
     img = resize_image(img,width2d,height2d)
 
@@ -143,12 +153,53 @@ def upload(request):
 
     print('sbsright',sbsright.shape)
     print('sbsleft',sbsleft.shape)
-    distance=24
+    distance=8
     img3d = mergeto3d(sbsleft,sbsright,distance)
     # file_name = default_storage.save('3d'+str(distance)+'.png', img3d)
-
+    file_url=file_url+'.png'
     print('img3d',img3d.shape)
-    cv2.imwrite(file.name,img3d)
-    # print('finished'+ '3d'+str(distance)+'.png')
+    print('file_url',file_url)
+    cv2.imwrite(str(file2d)+'.png',img3d)
+    
+    print('file2d',str(file2d))
+    print('finished'+ '3d'+str(distance)+'.png')
 
-    return HttpResponse("Get Files")
+    return JsonResponse({"file_url": file_url})
+
+
+# @csrf_exempt
+# def uploadVideo(request):
+#     myvideofile = request.FILES['video']
+#     print('myvideofile',myvideofile)
+#     fs = FileSystemStorage()  #默认路径 MEDIA_ROOT
+#     file_name = fs.save('videoPick.mov', myvideofile)
+#     file_url = fs.url(file_name)
+#     print('save file_name,file_url',file_name,file_url)
+
+#     video2d = fs.open(file_name)
+
+
+#     frame_dir = './frames/'
+#     d3eye_frame_dir = './3deyed/'
+#     sbs_dir = './sbs/'
+#     gif_name = 'frame'
+#     fps = 24
+
+
+#     beginindex = 0
+#     endindex = 5
+#     frame_result = './frames/'
+#     print('video2d',video2d)
+#     clip = VideoFileClip(str(video2d))
+#     # .subclip(beginindex,endindex)
+#     # (w, h) = clip.size
+#     print('clip size is ',clip.size)
+#     print('clip duration is ',clip.duration)
+#     print('file_url',file_url)
+#     # frames = clip.iter_frames()
+#     # counter = 0
+#     # for value in frames:
+#     #     counter += 1
+#     #     clip.save_frame(frame_result +  'frame' + str(counter) + '.jpg' ,t = counter/24)
+#     #     print('current frames is ', 'frame' + str(counter) + '.jpg' )
+#     return JsonResponse({"file_url": file_url})

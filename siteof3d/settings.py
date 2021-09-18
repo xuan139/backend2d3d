@@ -15,7 +15,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+print('BASE_DIR',BASE_DIR)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -31,6 +31,11 @@ ALLOWED_HOSTS = '*'
 
 MEDIA_ROOT =  os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880*10
+print('MEDIA_ROOT',MEDIA_ROOT)
+print('MEDIA_URL',MEDIA_URL)
+print('DATA_UPLOAD_MAX_MEMORY_SIZE',DATA_UPLOAD_MAX_MEMORY_SIZE)
 # Application definition
 
 INSTALLED_APPS = [
